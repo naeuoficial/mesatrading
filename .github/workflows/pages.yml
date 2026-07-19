@@ -1,0 +1,51 @@
+name: Publicar no GitHub Pages
+
+# Publica os arquivos estáticos da raiz. Não há build: o painel é HTML puro.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Uma publicação por vez; não cancela a que já está em andamento.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Conferir se os painéis existem e não estão vazios
+        run: |
+          for f in index.html index-mobile.html; do
+            test -s "$f" || { echo "::error::$f ausente ou vazio"; exit 1; }
+            echo "$f  $(wc -c < "$f") bytes"
+          done
+
+      - name: Conferir se o levantamento de mesas está embutido
+        run: |
+          grep -q "<<<MESAS-DADOS>>>" index.html \
+            || { echo "::error::dados das mesas não embutidos — rode build-mesas.py"; exit 1; }
+          python3 -c "import json;d=json.load(open('dados/mesas-normalizado.json'));print(len(d['firmas']),'mesas,',len(d['alertas']),'alertas')"
+
+  publicar:
+    needs: verificar
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deploy
+        uses: actions/deploy-pages@v4

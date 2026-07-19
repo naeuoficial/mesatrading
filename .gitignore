@@ -1,0 +1,32 @@
+# sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# editores
+.vscode/
+.idea/
+*.swp
+*~
+
+# ambiente e credenciais — nunca versionar
+.env
+.env.*
+*.pem
+*.key
+credenciais.json
+config.local.*
+
+# configuração local do Claude Code (o agente em .claude/agents é versionado)
+.claude/settings.local.json
+.mcp.json
+
+# MetaTrader gera estes ao compilar
+*.ex4
+*.ex5
+*.log
+
+# temporários
+tmp/
+scratch/
+*.bak
